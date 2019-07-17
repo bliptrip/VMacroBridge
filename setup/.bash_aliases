@@ -1,0 +1,12 @@
+alias mav='sudo /usr/local/bin/mavproxy.py --master=/dev/ttyUSB0,57600 --out=udpin:0.0.0.0:14551 --aircraft=bliptrip -a --logfile=mavproxy.tlog --mav20 --load-module=evjoy'
+alias mava='sudo /usr/local/bin/mavproxy.py --master=/dev/ttyACM0,57600 --out=udpin:0.0.0.0:14551 --aircraft=bliptrip -a --logfile=mavproxy.tlog --mav20 --load-module=evjoy'
+alias mava2='sudo /usr/local/bin/mavproxy.py --master=/dev/ttyACM1,57600 --out=udpin:0.0.0.0:14551 --aircraft=bliptrip -a --logfile=mavproxy.tlog --mav20 --load-module=evjoy'
+alias ds4='sudo ds4drv --fake --emulate-fake'
+alias ds4s='sudo systemctl status ds4drv'
+alias ds4d='sudo systemctl disable ds4drv'
+alias ds4e='sudo systemctl enable ds4drv'
+alias sysdr='sudo systemctl daemon-reload'
+alias mavs='sudo systemctl status mavgateway'
+alias sccs='screen -S cran'
+alias sccr='screen -r -d cran'
+
