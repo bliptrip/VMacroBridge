@@ -1,0 +1,5 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =3
+let g:netrw_dirhist_1='/opt/local/etc/macports'
+let g:netrw_dirhist_2='/opt/local/etc/select/python'
+let g:netrw_dirhist_3='/opt/local/etc/gconf'

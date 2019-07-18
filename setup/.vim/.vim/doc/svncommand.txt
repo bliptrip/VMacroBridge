@@ -1,0 +1,510 @@
+*svncommand.txt*	SVNCommand
+
+For instructions on installing this file, type
+	:help add-local-help
+inside Vim.
+
+Author:  Troy S. Curtis Jr <troycurtisjr+svncommand@gmail.com> 
+          
+Credits:  From the CVSCommand docs written by Bob Hiestand <bob.hiestand@gmail.com>
+          Benji Fisher's excellent MatchIt documentation
+
+
+==============================================================================
+1. Contents						*svncommand-contents*
+
+	Installation		: |svncommand-install|
+	SVNCommand Intro	: |svncommand|
+	SVNCommand Manual	: |svncommand-manual|
+	Customization		: |svncommand-customize|
+	Bugs			: |svncommand-bugs|
+
+==============================================================================
+
+2. SVNCommand Installation				*svncommand-install*
+
+The SVNCommand plugin comprises two files, svncommand.vim and svncommand.txt
+(this file).  In order to install the plugin, place the svncommand.vim file
+into a plugin directory in your runtime path (please see |add-global-plugin|
+and |'runtimepath'|.
+
+SVNCommand may be customized by setting variables, creating maps, and
+specifying event handlers.  Please see |svncommand-customize| for more
+details.
+
+This help file can be included in the VIM help system by copying it into a
+'doc' directory in your runtime path and then executing the |:helptags|
+command, specifying the full path of the 'doc' directory.  Please see
+|add-local-help| for more details.
+
+==============================================================================
+
+3. SVNCommand Intro					*svncommand*
+							*svncommand-intro*
+
+The SVNCommand plugin provides global ex commands for manipulating
+SVN-controlled source files.  In general, each command operates on the current
+buffer and accomplishes a separate svn function, such as update, commit, log,
+and others (please see |svncommand-commands| for a list of all available
+commands).  The results of each operation are displayed in a scratch buffer.
+Several buffer variables are defined for those scratch buffers (please see
+|svncommand-buffer-variables|).
+
+The notion of "current file" means either the current buffer, or, in the case
+of a directory buffer, the file on the current line within the buffer.
+
+For convenience, any SVNCommand invoked on a SVNCommand scratch buffer acts as
+though it was invoked on the original file and splits the screen so that the
+output appears in a new window.
+
+Many of the commands accept revisions as arguments.  By default, most operate
+on the most recent revision on the current branch if no revision is specified
+(though see |SVNCommandInteractive| to prompt instead).
+
+Each SVNCommand is mapped to a key sequence starting with the <Leader>
+keystroke.  The default mappings may be overridden by supplying different
+mappings before the plugin is loaded, such as in the vimrc, in the standard
+fashion for plugin mappings.  For examples, please see
+|svncommand-mappings-override|.
+
+The SVNCommand plugin may be configured in several ways.  For more details,
+please see |svncommand-customize|.
+
+==============================================================================
+
+4. SVNCommand Manual					*svncommand-manual*
+
+4.1 SVNCommand commands					*svncommand-commands*
+
+SVNCommand defines the following commands:
+
+|:SVNAdd|
+|:SVNAnnotate|
+|:SVNCommit|
+|:SVNDiff|
+|:SVNGotoOriginal|
+|:SVNLog|
+|:SVNRevert|
+|:SVNReview|
+|:SVNStatus|
+|:SVNInfo|
+|:SVNResolved|
+|:SVNPropedit|
+|:SVNUpdate|
+|:SVNVimDiff|
+|:SVNCommitDiff|
+
+:SVNAdd							*:SVNAdd*
+
+This command performs "svn add" on the current file.  Please note, this does
+not commit the newly-added file.
+
+:SVNAnnotate						*:SVNAnnotate*
+
+This command performs "svn annotate" on the current file.  If an argument is
+given, the argument is used as a revision number to display.  If not given an
+argument, it uses the most recent version of the file on the current branch.
+Additionally, if the current buffer is a SVNAnnotate buffer already, the
+version number on the current line is used.
+
+If the |SVNCommandAnnotateParent| variable is set to a non-zero value, the
+version previous to the one on the current line is used instead.  This allows
+one to navigate back to examine the previous version of a line.
+
+The filetype of the SVNCommand scratch buffer is set to 'SVNAnnotate', to take
+advantage of the bundled syntax file.
+
+
+:SVNCommit[!]						*:SVNCommit*
+
+If called with arguments, this performs "svn commit" using the arguments as
+the log message.
+
+If '!' is used with no arguments, an empty log message is committed.
+
+If called with no arguments, this is a two-step command.  The first step opens
+a buffer to accept a log message.  When that buffer is written, it is
+automatically closed and the file is committed using the information from that
+log message.  The commit can be abandoned if the log message buffer is deleted
+or wiped before being written.
+
+Alternatively, the mapping that is used to invoke :SVNCommit (by default
+<Leader>sc) can be used in the log message buffer to immediately commit.  This
+is useful if the |SVNCommandCommitOnWrite| variable is set to 0 to disable the
+normal commit-on-write behavior.
+
+:SVNDiff						*:SVNDiff*
+
+With no arguments, this performs "svn diff" on the current file against the
+current repository version.
+
+With one argument, "svn diff" is performed on the current file against the
+specified revision.
+
+With two arguments, "svn diff" is performed between the specified
+revisions of the current file.
+
+This command uses the 'SVNCommandDiffOpt' variable to specify diff options.
+If that variable does not exist, then 'wbBc' is assumed.  If you wish to have
+no options, then set it to the empty string.
+
+:SVNGotoOriginal					*:SVNGotoOriginal*
+
+This command returns the current window to the source buffer, if the current
+buffer is a SVN command output buffer.
+
+:SVNGotoOriginal!
+
+Like ":SVNGotoOriginal" but also executes :bufwipeout on all SVN command
+output buffers for the source buffer.
+
+:SVNLog							*:SVNLog*
+
+Performs "svn log" on the current file.
+
+If an argument is given, it is passed as an argument to the "-r" option of
+"svn log".
+
+:SVNRevert						*:SVNRevert*
+
+Replaces the current file with the most recent version from the repository in
+order to wipe out any undesired changes.
+
+:SVNReview						*:SVNReview*
+
+Retrieves a particular version of the current file.  If no argument is given,
+the most recent version of the file on the current branch is retrieved.
+Otherwise, the specified version is retrieved.
+
+:SVNStatus						*:SVNStatus*
+
+Performs "svn status" on the current file.
+
+:SVNUpdate						*:SVNUpdate*
+
+Performs "svn update" on the current file.  This intentionally does not
+automatically reload the current buffer, though vim should prompt the user to
+do so if the underlying file is altered by this command.
+
+:SVNVimDiff						*:SVNVimDiff*
+
+With no arguments, this prompts the user for a revision and then uses vimdiff
+to display the differences between the current file and the specified
+revision.  If no revision is specified, the most recent version of the file on
+the current branch is used.
+
+With one argument, that argument is used as the revision as above.  With two
+arguments, the differences between the two revisions is displayed using
+vimdiff.
+
+With either zero or one argument, the original buffer is used to perform the
+vimdiff.  When the other buffer is closed, the original buffer will be
+returned to normal mode.
+
+Once vimdiff mode is started using the above methods, additional vimdiff
+buffers may be added by passing a single version argument to the command.
+There may be up to 4 vimdiff buffers total.
+
+Using the 2-argument form of the command resets the vimdiff to only those 2
+versions.  Additionally, invoking the command on a different file will close
+the previous vimdiff buffers.
+
+:SVNPropedit						*:SVNPropedit*
+
+When no arguments are given, a list of the currently
+defined properties is given (using the "svn proplist" command).
+
+With one argument, the argument is taken to mean the property to edit, 
+and the user is presented with a buffer containing any existing values for 
+that property. The interface is similar to the Commit operation.  
+
+Once the user writes the file (or executes the :SVNPropedit key mapping) 
+the property is set with the given changes.
+
+:SVNCommitDiff				                *:SVNCommitDiff*
+
+Will parse the commit buffer (that should be autogenerated by
+svn), and split the window with a corresponding diff. It is
+highly convenient to review a diff when writing the log
+message.
+
+You may want to set the SVNAutoCommitDiff option so that
+this function is called automatically when given a
+svn-commit.* file.
+
+4.2 Mappings						*svncommand-mappings*
+
+By default, a mapping is defined for each command.  These mappings execute the
+default (no-argument) form of each command.
+
+<Leader>sa SVNAdd
+<Leader>sn SVNAnnotate
+<Leader>sc SVNCommit
+<Leader>sd SVNDiff
+<Leader>sg SVNGotoOriginal
+<Leader>sG SVNGotoOriginal!
+<Leader>sl SVNLog
+<Leader>sw SVNReview
+<Leader>ss SVNStatus
+<Leader>si SVNInfo
+<Leader>sr SVNResolved
+<Leader>su SVNUpdate
+<Leader>sv SVNVimDiff
+<Leader>sp SVNPropedit
+						*svncommand-mappings-override*
+
+The default mappings can be overriden by user-provided instead by mapping to
+<Plug>CommandName.  This is especially useful when these mappings collide with
+other existing mappings (vim will warn of this during plugin initialization,
+but will not clobber the existing mappings).
+
+For instance, to override the default mapping for :SVNAdd to set it to '\add',
+add the following to the vimrc:
+
+nmap \add <Plug>SVNAdd
+
+4.3 Automatic buffer variables			*svncommand-buffer-variables*
+
+Several buffer variables are defined in each SVNCommand result buffer.	These
+may be useful for additional customization in callbacks defined in the event
+handlers (please see |svncommand-events|).
+
+The following variables are automatically defined:
+
+b:svnOrigBuffNR						*b:svnOrigBuffNR*
+
+This variable is set to the buffer number of the source file.
+
+b:svncmd						*b:svncmd*
+
+This variable is set to the name of the svn command that created the result
+buffer.
+==============================================================================
+
+5. Configuration and customization			*svncommand-customize*
+							*svncommand-config*
+
+The SVNCommand plugin can be configured in two ways:  by setting configuration
+variables (see |svncommand-options|) or by defining SVNCommand event handlers
+(see |svncommand-events|).  Additionally, the SVNCommand plugin provides
+several option for naming the SVN result buffers (see |svncommand-naming|) and
+supported a customized status line (see |svncommand-statusline| and
+|svncommand-buffer-management|).
+
+5.1 SVNCommand configuration variables			*svncommand-options*
+
+Several variables affect the plugin's behavior.  These variables are checked
+at time of execution, and may be defined at the window, buffer, or global
+level and are checked in that order of precedence.
+
+
+The following variables are available:
+
+|SVNCommandAnnotateParent|
+|SVNCommandCommitOnWrite|
+|SVNCommandSVNExec|
+|SVNCommandDeleteOnHide|
+|SVNCommandDiffOpt|
+|SVNCommandDiffSplit|
+|SVNCommandEdit|
+|SVNCommandEnableBufferSetup|
+|SVNCommandInteractive|
+|SVNCommandNameMarker|
+|SVNCommandNameResultBuffers|
+|SVNCommandSplit|
+|SVNAutoCommitDiff|
+
+SVNCommandAnnotateParent			*SVNCommandAnnotateParent*
+
+This variable, if set to a non-zero value, causes the zero-argument form of
+SVNAnnotate when invoked on a SVNAnnotate buffer to go to the version previous
+to that displayed on the current line.  If not set, it defaults to 0.
+
+SVNCommandCommitOnWrite				*SVNCommandCommitOnWrite*
+
+This variable, if set to a non-zero value, causes the pending svn commit
+to take place immediately as soon as the log message buffer is written.
+If set to zero, only the SVNCommit mapping will cause the pending commit to
+occur.	If not set, it defaults to 1.
+
+SVNCommandSVNExec				*SVNCommandSVNExec*
+
+This variable controls the executable used for all SVN commands  If not set,
+it defaults to "svn".
+
+SVNCommandDeleteOnHide				*SVNCommandDeleteOnHide*
+
+This variable, if set to a non-zero value, causes the temporary SVN result
+buffers to automatically delete themselves when hidden.
+
+SVNCommandDiffOpt				*SVNCommandDiffOpt*
+
+This variable, if set, determines the options passed to the diff command of
+SVN.  If not set, it defaults to 'wbBc'.
+
+SVNCommandDiffSplit				*SVNCommandDiffSplit*
+
+This variable overrides the |SVNCommandSplit| variable, but only for buffers
+created with |:SVNVimDiff|.
+
+SVNCommandEdit					*SVNCommandEdit*
+
+This variable controls whether the original buffer is replaced ('edit') or
+split ('split').  If not set, it defaults to 'edit'.
+
+SVNCommandEnableBufferSetup			*SVNCommandEnableBufferSetup*
+
+This variable, if set to a non-zero value, activates SVN buffer management
+mode see (|svncommand-buffer-management|).  This mode means that two buffer
+variables, 'SVNRevision' and 'SVNBranch', are set if the file is
+SVN-controlled.  This is useful for displaying version information in the
+status bar.
+
+SVNCommandInteractive				*SVNCommandInteractive*
+
+This variable, if set to a non-zero value, causes appropriate commands (for
+the moment, only |:SVNReview|) to query the user for a revision to use instead
+of the current revision if none is specified.
+
+SVNCommandNameMarker				*SVNCommandNameMarker*
+
+This variable, if set, configures the special attention-getting characters
+that appear on either side of the svn buffer type in the buffer name.  This
+has no effect unless |SVNCommandNameResultBuffers| is set to a true value.  If
+not set, it defaults to '_'.  
+
+SVNCommandNameResultBuffers			*SVNCommandNameResultBuffers*
+
+This variable, if set to a true value, causes the svn result buffers to be
+named in the old way ('<source file name> _<svn command>_').  If not set
+or set to a false value, the result buffer is nameless.
+
+SVNCommandSplit					*SVNCommandSplit*
+
+This variable controls the orientation of the various window splits that
+may occur (such as with SVNVimDiff, when using a SVN command on a SVN
+command buffer, or when the |SVNCommandEdit| variable is set to 'split'.
+If set to 'horizontal', the resulting windows will be on stacked on top of
+one another.  If set to 'vertical', the resulting windows will be
+side-by-side.  If not set, it defaults to 'horizontal' for all but
+SVNVimDiff windows.
+
+SVNAutoCommitDiff			        *SVNAutoCommitDiff*
+
+This variable determines whether to enable automatic execution of the
+SVNCommitDiff() function whenever the file being loaded is an Subversion
+commit log (svn-commit.*).  The diff output is put into a new window who's
+orientation is determined by the SVNCommandSplit option. Note that this function 
+checks that you are at least in a svn working copy before trying to execute.  
+This keeps things like  cp and mv commands acting directly on the repository from
+generating errors. Defaults to 0 (disabled).
+
+5.2 SVNCommand events				*svncommand-events*
+
+For additional customization, SVNCommand can trigger user-defined events.
+Event handlers are provided by defining User event autocommands (see
+|autocommand|, |User|) in the SVNCommand group with patterns matching the
+event name.
+
+For instance, the following could be added to the vimrc to provide a 'q'
+mapping to quit a SVNCommand scratch buffer:
+
+augroup SVNCommand
+  au SVNCommand User SVNBufferCreated silent! nmap <unique> <buffer> q: bwipeout<cr>
+augroup END
+
+The following hooks are available:
+
+SVNBufferCreated		This event is fired just after a svn command
+				result buffer is created and filled with the
+				result of a svn command.  It is executed within
+				the context of the SVN command buffer.  The
+				SVNCommand buffer variables may be useful for
+				handlers of this event (please see
+				|svncommand-buffer-variables|).
+
+SVNBufferSetup			This event is fired just after SVN buffer setup
+				occurs, if enabled.
+
+SVNPluginInit			This event is fired when the SVNCommand plugin
+				first loads.
+
+SVNPluginFinish			This event is fired just after the SVNCommand
+				plugin loads.
+
+SVNVimDiffFinish		This event is fired just after the SVNVimDiff
+				command executes to allow customization of,
+				for instance, window placement and focus.
+
+5.3 SVNCommand buffer naming				*svncommand-naming*
+
+By default, the buffers containing the result of SVN commands are nameless
+scratch buffers.  It is intended that buffer variables of those buffers be
+used to customize the statusline option so that the user may fully control the
+display of result buffers.
+
+If the old-style naming is desired, please enable the
+|SVNCommandNameResultBuffers| variable.  Then, each result buffer will receive
+a unique name that includes the source file name, the SVN command, and any
+extra data (such as revision numbers) that were part of the command.
+
+5.4 SVNCommand status line support			*svncommand-statusline*
+
+It is intended that the user will customize the |'statusline'| option to
+include SVN result buffer attributes.  A sample function that may be used in
+the |'statusline'| option is provided by the plugin, SVNGetStatusLine().  In
+order to use that function in the status line, do something like the
+following:
+
+set statusline=%<%f\ %{SVNGetStatusLine()}\ %h%m%r%=%l,%c%V\ %P
+
+of which %{SVNGetStatusLine()} is the relevant portion.
+
+The sample SVNGetStatusLine() function handles both SVN result buffers and
+SVN-managed files if SVNCommand buffer management is enabled (please see
+|svncommand-buffer-management|).
+
+5.5 SVNCommand buffer management		*svncommand-buffer-management*
+
+The SVNCommand plugin can operate in buffer management mode, which means that
+it attempts to set the buffer variable 'SVNRevision' upon
+entry into a buffer.  This is rather slow because it means that 'svn status'
+will be invoked at each entry into a buffer (during the |BufEnter|
+autocommand).
+
+This mode is disabled by default.  In order to enable it, set the
+|SVNCommandEnableBufferSetup| variable to a true (non-zero) value.  Enabling
+this mode simply provides the buffer variables mentioned above.  The user must
+explicitly include those in the |'statusline'| option if they are to appear in
+the status line (but see |svncommand-statusline| for a simple way to do that).
+
+==============================================================================
+4. Tips							*svncommand-tips*
+
+4.1 Split window annotation, by Michael Anderson
+
+:nmap <Leader>cN :vs<CR><C-w>h<Leader>cn:vertical res 40<CR>
+                 \ggdddd:set scb<CR>:set nowrap<CR><C-w>lgg:set scb<CR>
+                 \:set nowrap<CR>
+
+This splits the buffer vertically, puts an annotation on the left (minus the
+header) with the width set to 40. An editable/normal copy is placed on the
+right.  The two versions are scroll locked so they  move as one. and wrapping
+is turned off so that the lines line up correctly. The advantages are...
+
+1) You get a versioning on the right.
+2) You can still edit your own code.
+3) Your own code still has syntax highlighting.
+
+==============================================================================
+
+5. Known bugs						*svncommand-bugs*
+
+Please let me know if you run across any.
+
+SVNVimDiff, when using the original (real) source buffer as one of the diff
+buffers, uses some hacks to try to restore the state of the original buffer
+when the scratch buffer containing the other version is destroyed.  There may
+still be bugs in here, depending on many configuration details.
+
+vim:tw=78:ts=8:ft=help
