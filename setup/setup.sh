@@ -65,7 +65,7 @@ cd ..
 
 #Install pymavlink manually with latest mavlink definition files to get full Mavlink 2.0 extension support
 cd pymavlink
-sudo MDEF=/home/pi/Downloads/bliptrip/mavlink pip install . -v
+sudo su -c 'MDEF=/home/pi/Downloads/bliptrip/mavlink/message_definitions pip install . -v'
 cd ..
 
 #Install my modifications to MAVProxy to support more than 8 channel RC override and my fake ps4 controller
